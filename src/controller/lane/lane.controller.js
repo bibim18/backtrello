@@ -47,8 +47,13 @@ export default class SystemController {
    @route('/:id', HttpMethod.DELETE)
    async delete(ctx) {
      try {
-       const param = ctx.params.id;
-       await lane.remove({ _id: param });
+      const param = ctx.params.id;
+      let da = await lane.find({_id:param})
+      const id = da[0].card_info.map(index => {
+          card.delete({ _id: index._cardid })
+      })
+
+      await lane.remove({ _id: param });
        const data = await lane.aggregate([
         {
         $lookup: 

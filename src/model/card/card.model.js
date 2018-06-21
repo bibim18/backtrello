@@ -5,6 +5,7 @@ const Schema = mongoose.Schema({
   attachment: { type: String },
   description: { type: String },
   comment: { type: String },
+  tag: { type: Array },
 });
 
 const model = mongoose.model('cards', Schema);

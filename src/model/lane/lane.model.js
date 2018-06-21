@@ -6,7 +6,7 @@ const cardInfoSchema = new mongoose.Schema({
 }, { _id: false });
 
 const Schema = new mongoose.Schema({
-  title: { type: String },
+  title: { type: String, required: true },
   card_info: { type: [cardInfoSchema], default: [] },
 });
 

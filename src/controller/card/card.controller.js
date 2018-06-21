@@ -8,13 +8,14 @@ export default class SystemController {
   @route('/:id', HttpMethod.POST)
   async main(ctx) {
     const param = ctx.params.id
-    const { cardTitle , description ,attachment,comment } = ctx.request.body;
+    const { cardTitle  } = ctx.request.body;
     let _cardid
     await card.create({
       cardTitle,
-      description,
-      attachment,
-      comment
+      description:'',
+      attachment:'',
+      comment:'',
+      tag:[]
     }).then(res => {
        _cardid = res._id
     })
@@ -48,7 +49,17 @@ export default class SystemController {
   //show
   @route('/', HttpMethod.GET)
   async get(ctx) {
-    const dd = await card.find({});
+    const dd = await lane.aggregate([
+      {
+        $lookup: 
+          {
+            from: 'cards',
+            localField: 'card_info._cardid',
+            foreignField: '_id',
+            as: 'card_info' 
+          }
+      }
+    ]);
     ctx.body = dd;
   }
 
@@ -57,7 +68,8 @@ export default class SystemController {
   async update(ctx) {
     const param = ctx.params.id;
     const { cardTitle , description ,attachment,comment } = ctx.request.body;
-    const upD = await card.update(
+    console.log("backend ",cardTitle , description ,attachment,comment)
+    await card.update(
       {
         _id: param
       },
@@ -68,6 +80,17 @@ export default class SystemController {
         comment
       }
     );
+    const upD = await lane.aggregate([
+      {
+        $lookup: 
+          {
+            from: 'cards',
+            localField: 'card_info._cardid',
+            foreignField: '_id',
+            as: 'card_info' 
+          }
+      }
+    ]);
     ctx.body = upD;
   }
 }
