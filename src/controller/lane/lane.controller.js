@@ -42,6 +42,45 @@ export default class SystemController {
     ])
     ctx.body = data;
   }
+   //update card for move
+   @route('/:laneid/:cardid/:position',HttpMethod.PATCH)
+   async update(ctx){
+     const laneid = ctx.params.laneid
+     const cardid = ctx.params.cardid
+     const posit = parseInt(ctx.params.position)
+     console.log(laneid,cardid,posit)
+     await lane.update(
+      {"_id":laneid},
+      {$pull:{
+        "card_info":{
+          _cardid:cardid
+        }
+      }}
+    )
+    await lane.update(
+      {"_id":laneid},
+      {
+        $push: { 
+          card_info: {
+              $each:[{"_cardid":cardid}],
+              $position:posit,
+          },
+        }
+      },
+    )
+    console.log("lane =",lane)
+    ctx.body =  await lane.aggregate([
+        {
+        $lookup: 
+          {
+            from: 'cards',
+            localField: 'card_info._cardid',
+            foreignField: '_id',
+            as: 'card_info' 
+          }
+        },
+      ])
+   }
 
    //delete lane
    @route('/:id', HttpMethod.DELETE)
