@@ -26,7 +26,7 @@ export default class SystemController {
         {
           $push: { 
             card_info: {
-              _cardid
+              _cardid,
             }
           }
         },

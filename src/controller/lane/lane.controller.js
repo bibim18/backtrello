@@ -2,6 +2,20 @@ import { HttpMethod, route } from '@spksoft/koa-decorator';
 import lane from '../../model/lane/lane.model';
 import card from '../../model/card/card.repo'
 
+const handleArgg = () => {
+  return lane.aggregate([
+    {
+    $lookup: 
+      {
+        from: 'cards',
+        localField: 'card_info._cardid',
+        foreignField: '_id',
+        as: 'card_info' 
+      }
+    }
+  ])
+}
+
 @route('/lane')
 export default class SystemController {
   //insert lanes
@@ -12,75 +26,29 @@ export default class SystemController {
       title,
       card_info:[]
     });
-    const data = await lane.aggregate([
-      {
-      $lookup: 
-        {
-          from: 'cards',
-          localField: 'card_info._cardid',
-          foreignField: '_id',
-          as: 'card_info' 
-        }
-      }
-    ])
+    const data = await handleArgg()
     ctx.body = data;
   }
 
   //show card
   @route('/', HttpMethod.GET)
   async get(ctx) {
-    const data = await lane.aggregate([
-      {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-      }
-    ])
+    const data = await handleArgg()
     ctx.body = data;
   }
    //update card for move
-   @route('/:laneid/:cardid/:position',HttpMethod.PATCH)
-   async update(ctx){
-     const laneid = ctx.params.laneid
-     const cardid = ctx.params.cardid
-     const posit = parseInt(ctx.params.position)
-     console.log(laneid,cardid,posit)
-     await lane.update(
-      {"_id":laneid},
-      {$pull:{
-        "card_info":{
-          _cardid:cardid
-        }
-      }}
-    )
-    await lane.update(
-      {"_id":laneid},
-      {
-        $push: { 
-          card_info: {
-              $each:[{"_cardid":cardid}],
-              $position:posit,
-          },
-        }
-      },
-    )
-    console.log("lane =",lane)
-    ctx.body =  await lane.aggregate([
-        {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-        },
-      ])
-   }
+  @route('/',HttpMethod.PATCH)
+  async update(ctx){
+    
+    const data = ctx.request.body;
+    try{
+      await lane.deleteMany({})
+      await lane.insertMany(data)
+      ctx.body = await handleArgg()
+    }catch(err){
+      console.log(err)
+    }
+  }
 
    //delete lane
    @route('/:id', HttpMethod.DELETE)
@@ -93,17 +61,7 @@ export default class SystemController {
       })
 
       await lane.remove({ _id: param });
-       const data = await lane.aggregate([
-        {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-        }
-      ])
+       const data = await handleArgg()
         ctx.body = data;
        
      } catch (err) {
@@ -126,16 +84,6 @@ export default class SystemController {
         }}
       )
       await card.delete({ _id: paramcard })
-      ctx.body= await lane.aggregate([
-        {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-        }
-      ])
+      ctx.body = await handleArgg()
    }
  }
