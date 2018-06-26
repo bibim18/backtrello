@@ -1,6 +1,33 @@
 import { HttpMethod, route } from '@spksoft/koa-decorator';
 import card from '../../model/card/card.repo';
 import lane from '../../model/lane/lane.model'
+import multer from 'koa-multer'
+import serve from 'koa-static'
+const storage = multer.diskStorage({
+  destination: function (req, file,cb){
+    cb(null,'uploads/')
+  },
+  filename: function (req, file, cb){
+    cb(null, file.originalname)
+  }
+})
+
+const upload = multer({ storage: storage });
+
+
+const handleArgg = () => {
+  return lane.aggregate([
+    {
+    $lookup: 
+      {
+        from: 'cards',
+        localField: 'card_info._cardid',
+        foreignField: '_id',
+        as: 'card_info' 
+      }
+    }
+  ])
+}
 
 @route('/card')
 export default class SystemController {
@@ -33,33 +60,13 @@ export default class SystemController {
         { upsert: true }
       );
     
-    ctx.body = await lane.aggregate([
-      {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-      }
-    ]);
+    ctx.body = await handleArgg()
   }
 
   //show
   @route('/', HttpMethod.GET)
   async get(ctx) {
-    const dd = await lane.aggregate([
-      {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-      }
-    ]);
+    const dd = await handleArgg()
     ctx.body = dd;
   }
 
@@ -67,8 +74,7 @@ export default class SystemController {
   @route('/:id', HttpMethod.PATCH)
   async update(ctx) {
     const param = ctx.params.id;
-    const { cardTitle , description ,attachment,comment } = ctx.request.body;
-    console.log("backend ",cardTitle , description ,attachment,comment)
+    const { cardTitle ,description ,comment } = ctx.request.body;
     await card.update(
       {
         _id: param
@@ -76,21 +82,19 @@ export default class SystemController {
       {
         cardTitle,
         description,
-        attachment,
         comment
       }
     );
-    const upD = await lane.aggregate([
-      {
-        $lookup: 
-          {
-            from: 'cards',
-            localField: 'card_info._cardid',
-            foreignField: '_id',
-            as: 'card_info' 
-          }
-      }
-    ]);
+    const upD = await handleArgg()
     ctx.body = upD;
+  }
+
+  //upload file 
+  @route('/upload/:id', HttpMethod.POST ,upload.single('file'))
+  async upload(ctx){
+    const param = ctx.params.id
+    const file = ctx.req.file.originalname
+    await card.update({"_id":param},{attachment:file})
+    ctx.body = file
   }
 }
