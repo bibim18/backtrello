@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
 const Schema = mongoose.Schema({
-  cardTitle: { type: String, required: true },
+  cardTitle: { type: String },
   attachment: { type: String },
   description: { type: String },
   comment: { type: String },
   tag: { type: Array },
+  index: { type: Number },
 });
 
 const model = mongoose.model('cards', Schema);

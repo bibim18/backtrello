@@ -11,9 +11,9 @@ const storage = multer.diskStorage({
     cb(null, file.originalname)
   }
 })
-
 const upload = multer({ storage: storage });
 
+let index = 0
 const handleArgg = () => {
   return lane.aggregate([
     {
@@ -24,7 +24,7 @@ const handleArgg = () => {
         foreignField: '_id',
         as: 'card_info' 
       }
-    }
+    },
   ])
 }
 
@@ -36,12 +36,14 @@ export default class SystemController {
     const param = ctx.params.id
     const { cardTitle  } = ctx.request.body;
     let _cardid
+    index++
     await card.create({
       cardTitle,
       description:'',
       attachment:'',
       comment:'',
-      tag:[]
+      tag:[],
+      index
     }).then(res => {
        _cardid = res._id
     })
