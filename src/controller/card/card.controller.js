@@ -2,7 +2,7 @@ import { HttpMethod, route } from '@spksoft/koa-decorator';
 import card from '../../model/card/card.repo';
 import lane from '../../model/lane/lane.model'
 import multer from 'koa-multer'
-import serve from 'koa-static'
+
 const storage = multer.diskStorage({
   destination: function (req, file,cb){
     cb(null,'uploads/')
@@ -13,7 +13,6 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({ storage: storage });
-
 
 const handleArgg = () => {
   return lane.aggregate([
@@ -66,8 +65,8 @@ export default class SystemController {
   //show
   @route('/', HttpMethod.GET)
   async get(ctx) {
-    const dd = await handleArgg()
-    ctx.body = dd;
+    const data = await handleArgg()
+    ctx.body = data;
   }
 
   //update
@@ -85,8 +84,7 @@ export default class SystemController {
         comment
       }
     );
-    const upD = await handleArgg()
-    ctx.body = upD;
+    ctx.body = await handleArgg()
   }
 
   //upload file 
@@ -96,5 +94,13 @@ export default class SystemController {
     const file = ctx.req.file.originalname
     await card.update({"_id":param},{attachment:file})
     ctx.body = file
+  }
+
+  @route('/tag/:id', HttpMethod.PATCH)
+  async patch(ctx){
+    const tag = ctx.request.body
+    const param = ctx.params.id
+    await card.update({'_id':param},{'tag':tag})
+    ctx.body = await handleArgg()
   }
 }

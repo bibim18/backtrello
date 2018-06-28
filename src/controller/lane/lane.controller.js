@@ -36,6 +36,7 @@ export default class SystemController {
     const data = await handleArgg()
     ctx.body = data;
   }
+  
    //update card for move
   @route('/',HttpMethod.PATCH)
   async update(ctx){
