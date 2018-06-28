@@ -13,11 +13,6 @@ const handleArgg = () => {
         as: 'card_info' 
       }
     },
-    // {
-    //  "$unwind": "$card_info"
-    // },
-    {"$sort": {'card_info.index': 1}}, 
-    // {$group: {_id: '$_id', 'card_info': {$push: '$card_info'}}}, 
   ])
 }
 
@@ -61,6 +56,7 @@ export default class SystemController {
   @route('/card',HttpMethod.PATCH)
   async test(ctx){
     const data = ctx.request.body;
+    console.log("data ",data)
     try{
       await card.deleteMany({})
       await card.insertMany(data)
@@ -95,7 +91,7 @@ export default class SystemController {
       let da = await lane.find({_id:param})
       const id = da[0].card_info.map(index => {
         console.log("delete in lane da ",da)
-          card.delete({ _id: index._cardid })
+          card.remove({ _id: index._cardid })
       })
 
       await lane.remove({ _id: param });
@@ -123,7 +119,7 @@ export default class SystemController {
           }
         }}
       )
-      await card.delete({ '_id': paramcard })
+      await card.remove({ '_id': paramcard })
       ctx.body = await handleArgg()
    }
  }
